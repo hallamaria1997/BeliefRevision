@@ -93,6 +93,8 @@ class BeliefBase:
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
 
+        #TODO: add contradiction statement spotting
+
         return True
 
     #let's do pl_resolution

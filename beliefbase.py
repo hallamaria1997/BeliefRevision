@@ -12,12 +12,28 @@ class BeliefBase:
         print("calling belief base ")
 
     def add(self, belief):
-        """Adds belief from user input to the base"""
-        #add verification step
-        if '<>' in belief:
-            belief = self.parsing_bicond(belief)
-        self.cnf.append(to_cnf(belief))
-        self.beliefs.append(belief)
+
+        #add validate belief f.x. not q -> q shouldn't be let through
+        #and there should not be any redundancies
+        #if there are duplicates (thatis if we try to input something that's already in there)
+        #I think we should remove it from the queue and add to the back of it so it becomes a higher priority
+        #attention, should make sure A&B and B&A don't both exist
+        if not self.validate_belief(belief):
+            return ("descriptive text why didn't add")
+        
+        belief = Belief(belief, self.beliefCount)
+        #use pl resolution and if the sentence can be entailed from the BB
+        #if is entailed from BB then expand right away
+        if self.pl_resolution(self.beliefBase):
+            self.expand(belief)
+        else:
+        #if isn't entailed
+            #contract
+            #expend
+            self.contract(belief)
+            self.expand(belief)
+
+        return 1
 
     
 
@@ -41,10 +57,11 @@ class BeliefBase:
         """Returns all beliefs in the base"""
         return self.beliefs
 
-    def validate_formatting(self, belief):
-        return True
-
     def validate_belief(self,belief):
+        """Validate belief, no contradictions"""
+        if '<>' in belief:
+            belief = self.parsing_bicond(belief)
+
         return True
 
     #let's do pl_resolution

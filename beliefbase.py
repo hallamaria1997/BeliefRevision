@@ -76,9 +76,41 @@ class BeliefBase:
 
         return True
 
-    #let's do pl_resolution
-    def pl_resolution(self, belief):
-        return 1
+    def collect_beliefs_cnf(self):
+        beliefs_cnf = []
+        for key,values in self.beliefBase.items():
+            beliefs_cnf.append(values.cnf)
+        return beliefs_cnf
+
+    def get_clause_pairs(self, clauses):
+        return list(itertools.combinations(clauses, 2))
+
+
+    #based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255
+    def pl_resolution(self, alpha):
+        """Check if Beliefbase entails new belies"""
+
+        not_alpha = Not(alpha.cnf)
+        clauses_cnf = self.collect_beliefs_cnf().append(not_alpha)
+        clause_pairs = self.get_clause_pairs(clauses_cnf)
+        new = set()
+        clauses = set(clauses_cnf)
+
+        while True:
+            for pairs in clause_pairs:
+                resolvents = pl_resolve(pairs)
+                if not resolvents: #if the list is empty
+                    return True
+                new = new.union(set(resolvents))
+                
+            if new.issubset(clauses):
+                return False
+            
+            clauses = clauses.union(new)
+
+    #ATH temporary
+    def pl_resolve(self,pairs):
+        return []
 
     def expand(self, belief):
         self.beliefBase[belief.formula] = belief

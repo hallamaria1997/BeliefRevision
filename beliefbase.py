@@ -62,7 +62,3 @@ class BeliefBase:
         #maybe here we create world and evaluate them
         #maybe from there we get a highest plausability order.... I'm not sure
 
-
-
-
-

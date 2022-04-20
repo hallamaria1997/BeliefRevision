@@ -18,8 +18,10 @@ class BeliefBase:
         #if there are duplicates (thatis if we try to input something that's already in there)
         #I think we should remove it from the queue and add to the back of it so it becomes a higher priority
         #attention, should make sure A&B and B&A don't both exist
+        if not self.validate_formatting(belief):
+            return ("invalid formatting")
         if not self.validate_belief(belief):
-            return ("descriptive text why didn't add")
+            return ("invalid belief")
         
         belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
@@ -56,6 +58,16 @@ class BeliefBase:
     def get(self):
         """Returns all beliefs in the base"""
         return self.beliefs
+
+    def validate_formatting(self, belief):
+        # check if there is a digit
+        if any(char.isdigit() for char in belief):
+            print("in here")
+            return False
+        # check if two consecutive characters
+
+        # check if two consecutive operators
+        return True
 
     def validate_belief(self,belief):
         """Validate belief, no contradictions"""

@@ -1,5 +1,7 @@
 import re
 from sympy.logic.boolalg import to_cnf
+from belief import Belief
+import itertools
 
 class BeliefBase:
     cnf_format: str
@@ -24,15 +26,10 @@ class BeliefBase:
         
         belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
-        #if is entailed from BB then expand right away
-        if self.pl_resolution(self.beliefBase):
-            self.expand(belief)
-        else:
-        #if isn't entailed
-            #contract
-            #expend
-            self.contract(belief)
-            self.expand(belief)
+
+        #breyat þessu í eitt revision fall
+        self.contract(belief)
+        self.expand(belief)
 
         return 1
 

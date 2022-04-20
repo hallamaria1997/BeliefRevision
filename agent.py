@@ -1,18 +1,15 @@
 from beliefbase import BeliefBase
 
 class Agent:
-    def __init__(self, name=None, board=None):
+    def __init__(self):
         self.running = True
         self.belief_base = BeliefBase()
-<<<<<<< HEAD
         print("User Guidelines:  When inserting your sentances to the belief base \nmake sure that they are correctly formatted.\n")
         print("Each sentanece can only contain single letters, operators and the words True/False")
         print("This setup uses the following operator translations: \n")
         print("Operator        | Syntax\nNegotion(NOT)   | ~\nConjuction(AND) | &\nDisjunction(OR) | |\nImplication     | >>\nBiconditional   | <>")
         #print("Negotion(NOT): ~p\nConjuction(AND): p&q\nDisjunction(OR): p|q\nImplication: p>>q\nBiconditional: p<>q\n")
         print("Finally, all sentances require parenthesis to indicate operator procedence: (p>>q)&p\n")
-=======
->>>>>>> 7cd216a62ea6ec5e4431b53e081b486b2d38bbb6
 
     def get_action(self):
 

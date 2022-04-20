@@ -22,11 +22,7 @@ class BeliefBase:
         self.beliefCount = 0
 
     def add(self, belief):
-        belief = Belief(belief, self.beliefCount)
 
-        #add validate formatting
-        if not self.validate_formatting(belief):
-            return ("descriptive text why didn't add")
         #add validate belief f.x. not q -> q shouldn't be let through
         #and there should not be any redundancies
         #if there are duplicates (thatis if we try to input something that's already in there)
@@ -34,6 +30,8 @@ class BeliefBase:
         #attention, should make sure A&B and B&A don't both exist
         if not self.validate_belief(belief):
             return ("descriptive text why didn't add")
+        
+        belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
         #if is entailed from BB then expand right away
         if self.pl_resolution(self.beliefBase):
@@ -68,10 +66,11 @@ class BeliefBase:
     def get(self):
         return list(self.beliefBase.values())
 
-    def validate_formatting(self, belief):
-        return True
-
     def validate_belief(self,belief):
+        """Validate belief, no contradictions"""
+        if '<>' in belief:
+            belief = self.parsing_bicond(belief)
+
         return True
 
     #let's do pl_resolution

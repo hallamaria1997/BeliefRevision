@@ -4,7 +4,7 @@ class Agent:
     def __init__(self):
         self.running = True
         self.belief_base = BeliefBase()
-        print_userguides()
+        self.print_userguides()
 
     def get_action(self):
         #add clear and quit
@@ -28,7 +28,6 @@ class Agent:
         self.running = False
 
     def print_userguides(self):
-        
         print("User Guidelines:  When inserting your sentances to the belief base \nmake sure that they are correctly formatted.\n")
         print("Each sentanece can only contain single letters, operators and the words True/False")
         print("This setup uses the following operator translations: \n")

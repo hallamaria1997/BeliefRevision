@@ -1,20 +1,10 @@
 import re
 from sympy.logic.boolalg import to_cnf
-import queue
 from belief import Belief
-
-#def add(self, belief):
-#        """Adds belief from user input to the base"""
-#        #add verification step
-#        if '<>' in belief:
-#            belief = self.parsing_bicond(belief)
-#        self.cnf.append(to_cnf(belief))
-#        self.beliefs.append(belief)
-
+import itertools
 
 class BeliefBase:
-    beliefBase : dict
-    beliefCount : int
+    cnf_format: str
     return_belief: str
 
     def __init__(self):
@@ -36,15 +26,10 @@ class BeliefBase:
         
         belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
-        #if is entailed from BB then expand right away
-        if self.pl_resolution(self.beliefBase):
-            self.expand(belief)
-        else:
-        #if isn't entailed
-            #contract
-            #expend
-            self.contract(belief)
-            self.expand(belief)
+
+        #breyat þessu í eitt revision fall
+        self.contract(belief)
+        self.expand(belief)
 
         return 1
 
@@ -61,10 +46,11 @@ class BeliefBase:
 
     def clear(self):
         """Clears all beliefs from the BeliefBase"""
-        self.beliefs = {}
+        self.beliefs = []
 
     def get(self):
-        return list(self.beliefBase.values())
+        """Returns all beliefs in the base"""
+        return self.beliefs
 
     def validate_formatting(self, belief):
         """Validate format of user input"""
@@ -97,9 +83,41 @@ class BeliefBase:
 
         return True
 
-    #let's do pl_resolution
-    def pl_resolution(self, belief):
-        return 1
+    def collect_beliefs_cnf(self):
+        beliefs_cnf = []
+        for key,values in self.beliefBase.items():
+            beliefs_cnf.append(values.cnf)
+        return beliefs_cnf
+
+    def get_clause_pairs(self, clauses):
+        return list(itertools.combinations(clauses, 2))
+
+
+    #based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255
+    def pl_resolution(self, alpha):
+        """Check if Beliefbase entails new belies"""
+
+        not_alpha = Not(alpha.cnf)
+        clauses_cnf = self.collect_beliefs_cnf().append(not_alpha)
+        clause_pairs = self.get_clause_pairs(clauses_cnf)
+        new = set()
+        clauses = set(clauses_cnf)
+
+        while True:
+            for pairs in clause_pairs:
+                resolvents = pl_resolve(pairs)
+                if not resolvents: #if the list is empty
+                    return True
+                new = new.union(set(resolvents))
+                
+            if new.issubset(clauses):
+                return False
+            
+            clauses = clauses.union(new)
+
+    #ATH temporary
+    def pl_resolve(self,pairs):
+        return []
 
     def expand(self, belief):
         self.beliefBase[belief.formula] = belief

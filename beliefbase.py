@@ -20,9 +20,11 @@ class BeliefBase:
         #I think we should remove it from the queue and add to the back of it so it becomes a higher priority
         #attention, should make sure A&B and B&A don't both exist
         if not self.validate_formatting(belief):
-            return ("invalid formatting")
+            print("Invalid formatting, press 'h' for help")
+            return 0;
         if not self.validate_belief(belief):
-            return ("invalid belief")
+            print("invalid belief")
+            return 0;
         
         belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
@@ -46,14 +48,22 @@ class BeliefBase:
 
     def clear(self):
         """Clears all beliefs from the BeliefBase"""
-        self.beliefs = []
+        self.beliefBase.clear()
+        print("The Belief Base is now empty!")
+        return '';
 
     def get(self):
         """Returns all beliefs in the base"""
-        return self.beliefs
+        if len(self.beliefBase) == 0: print('There is nothing stored in the Belief Base!') 
+        else:
+            print("Overview of sentences in the Belief Base:\n")
+            for value in self.beliefBase.values():
+                print(value)
+        return '';
 
     def validate_formatting(self, belief):
         """Validate format of user input"""
+        self.operators = self.valid_operators[0:-1]
         # add whitespace between and split on space to create a list of inputs
         if " " not in belief:
             belief = " ".join(belief)
@@ -67,7 +77,7 @@ class BeliefBase:
             if (belief[i].isalpha() and belief[i+1].isalpha()):
                 return False
 
-            if (belief[i] in self.valid_operators) and (belief[i+1] in self.valid_operators):
+            if (belief[i] in self.valid_operators) and (belief[i+1] in self.operators):
                 return False
         # check if operators are in the beginning or end of the string
         if (belief[0] in self.valid_operators) or (belief[-1] in self.valid_operators):
@@ -80,6 +90,7 @@ class BeliefBase:
             belief = self.parsing_bicond(belief)
 
         #TODO: add contradiction statement spotting
+        #contradict = 
 
         return True
 
@@ -120,7 +131,8 @@ class BeliefBase:
         return []
 
     def expand(self, belief):
-        self.beliefBase[belief.formula] = belief
+        #self.beliefBase[belief.formula] = belief
+        self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
 
     #not sure how we wanna do this, this is temporary, just removing right now
@@ -129,8 +141,3 @@ class BeliefBase:
 
         #maybe here we create world and evaluate them
         #maybe from there we get a highest plausability order.... I'm not sure
-
-
-
-
-

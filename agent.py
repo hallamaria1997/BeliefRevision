@@ -20,9 +20,14 @@ class Agent:
             self.belief_base.clear()
         elif(action == "4"):
             self.quit()
-        elif(action == 5):
+        elif(action == "5"):
             belief = input("Input belief ")
+            #þarf að laga eh
             self.belief_base.pl_resolution(belief)
+        elif(action == "6"):
+            belief = input("input belief")
+            belief = self.belief_base.to_belief(belief)
+            print(self.belief_base.pl_resolution(belief))
 
     def quit(self):
         self.running = False

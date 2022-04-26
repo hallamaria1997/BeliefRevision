@@ -24,7 +24,7 @@ class BeliefBase:
             return 0
         if not self.validate_belief(belief):
             print("invalid belief")
-            return 0;
+            return 0
         
         belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
@@ -34,6 +34,10 @@ class BeliefBase:
         self.expand(belief)
 
         return 1
+
+    def to_belief(self,belief):
+        belief = Belief(belief, self.beliefCount)
+        return belief
 
     def parsing_bicond(self, belief):
         """Formats biconditionality to match requirements 
@@ -50,7 +54,7 @@ class BeliefBase:
         """Clears all beliefs from the BeliefBase"""
         self.beliefBase.clear()
         print("The Belief Base is now empty!")
-        return '';
+        return ''
 
     def get(self):
         """Returns all beliefs in the base"""
@@ -58,8 +62,8 @@ class BeliefBase:
         else:
             print("Overview of sentences in the Belief Base:\n")
             for value in self.beliefBase.values():
-                print(value)
-        return '';
+                print(value.cnf) #TODO breyta þessu til baka, fyrir test purposes
+        return ''
 
     def validate_formatting(self, belief):
         """Validate format of user input"""
@@ -108,27 +112,61 @@ class BeliefBase:
     def pl_resolution(self, alpha):
         """Check if Beliefbase entails new belies"""
 
-        not_alpha = Not(alpha.cnf)
-        clauses_cnf = self.collect_beliefs_cnf().append(not_alpha)
+        not_alpha = str(Not(alpha.cnf))
+        clauses_cnf = self.collect_beliefs_cnf()
+        cleaned_clauses = []
+        for c in clauses_cnf:
+            #str(c).replace("(", "")
+            #str(c).replace(")", "")
+            tempList = str(c).split("&")
+            for t in tempList:
+                cleaned_clauses.append(t.replace(" ", "").replace("(", "").replace(")", ""))
+
+        clauses_cnf = cleaned_clauses
+        clauses_cnf.append(not_alpha)
+
         clause_pairs = self.get_clause_pairs(clauses_cnf)
-        new = set()
         clauses = set(clauses_cnf)
 
         while True:
+            new = set()
+            clauses = set(clauses)
+            clause_pairs = self.get_clause_pairs(clauses)
+
             for pairs in clause_pairs:
-                resolvents = pl_resolve(pairs)
-                if not resolvents: #if the list is empty
+                resolvents = self.pl_resolve(pairs)
+                if '' in resolvents: #if the list constains an empty clause
                     return True
                 new = new.union(set(resolvents))
-                
+
             if new.issubset(clauses):
                 return False
             
             clauses = clauses.union(new)
 
-    #ATH temporary
+
     def pl_resolve(self,pairs):
-        return []
+
+        resolvents = []
+
+        ci = str(pairs[0]).replace(" ", "").split("|")
+        cj = str(pairs[1]).replace(" ", "").split("|")
+
+        for i in ci:
+            for j in cj:
+                j_negate = str(Not(j))
+                if i == j_negate:
+                    temp_ci = ci
+                    temp_cj = cj
+                    [temp_ci.remove(i) for xi in temp_ci]
+                    [temp_cj.remove(j) for xj in temp_cj]
+                    temp_clause = temp_ci + temp_cj
+
+                    temp_clause = list(set(temp_clause))
+                    temp_clause = "|".join(temp_clause)
+                    resolvents.append(temp_clause)
+        
+        return resolvents
 
     def expand(self, belief):
         #self.beliefBase[belief.formula] = belief
@@ -136,8 +174,11 @@ class BeliefBase:
         self.beliefCount += 1
 
     #not sure how we wanna do this, this is temporary, just removing right now
+    #laga hverju við erum að poppa með, á að vera priority-ið frekar
     def contract(self,belief):
         self.beliefBase.pop(belief.formula, None)
+
+
 
         #maybe here we create world and evaluate them
         #maybe from there we get a highest plausability order.... I'm not sure

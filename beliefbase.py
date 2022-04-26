@@ -1,4 +1,5 @@
 import re
+from sympy import true
 from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
@@ -26,14 +27,9 @@ class BeliefBase:
             print("invalid belief")
             return 0
         
-        belief = Belief(belief, self.beliefCount)
         #use pl resolution and if the sentence can be entailed from the BB
 
-        #breyat þessu í eitt revision fall
-        self.contract(belief)
-        self.expand(belief)
-
-        return 1
+        self.revision(belief)
 
     def to_belief(self,belief):
         belief = Belief(belief, self.beliefCount)
@@ -179,6 +175,7 @@ class BeliefBase:
         return resolvents
 
     def expand(self, belief):
+        belief = Belief(belief, self.beliefCount)
         #self.beliefBase[belief.formula] = belief
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
@@ -186,9 +183,7 @@ class BeliefBase:
     #not sure how we wanna do this, this is temporary, just removing right now
     #laga hverju við erum að poppa með, á að vera priority-ið frekar
     def contract(self,belief):
-        self.beliefBase.pop(belief.formula, None)
-
-
+        self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
 
         #maybe here we create world and evaluate them
         #maybe from there we get a highest plausability order.... I'm not sure
@@ -196,12 +191,19 @@ class BeliefBase:
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs"""
         # Exclude all contradictions
-        contradicting_belief = Not(belief.cnf)
+        contradicting_belief_cnf = to_cnf(Not(belief))
 
-        if contradicting_belief in self.beliefs_cnf:
-            self.contract(self.beliefs_cnf)
+        if self.check_if_in_belief_base_cnf(contradicting_belief_cnf):
+            #self.contract(belief)
+            print("foundit")
         
-        self.expand(belief.formula)
+        self.expand(belief)
+
+    def check_if_in_belief_base_cnf(self, belief_cnf_format):
+        for value in self.beliefBase.values():
+            if belief_cnf_format == value.cnf:
+                return True
+        return False
 
 
 

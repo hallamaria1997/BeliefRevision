@@ -8,7 +8,7 @@ class Agent:
 
     def get_action(self):
         #add clear and quit
-        print("What do you wanna do??\n 1. Display belief base \n 2. Add to belief base \n 3. Clear belief base \n 4. Quit")
+        print("What do you wanna do??\n 1. Display belief base \n 2. Add to belief base \n 3. Clear belief base \n 4. Quit \n 5. Check entailment")
         action = input() 
 
         if(action == "1"):
@@ -22,12 +22,11 @@ class Agent:
             self.quit()
         elif(action == "5"):
             belief = input("Input belief ")
-            #þarf að laga eh
             self.belief_base.pl_resolution(belief)
         elif(action == "6"):
             belief = input("input belief")
-            #belief = self.belief_base.to_belief(belief)
-            print(self.belief_base.pl_resolution(belief))
+            belief = self.belief_base.to_belief(belief)
+            print(self.belief_base.contract(belief))
 
     def quit(self):
         self.running = False

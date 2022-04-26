@@ -112,8 +112,9 @@ class BeliefBase:
     def pl_resolution(self, alpha):
         """Check if Beliefbase entails new belies"""
 
-        not_alpha = str(Not(alpha.cnf))
+        not_alpha = to_cnf(Not(alpha))
         clauses_cnf = self.collect_beliefs_cnf()
+        clauses_cnf.append(not_alpha)
         cleaned_clauses = []
         for c in clauses_cnf:
             #str(c).replace("(", "")
@@ -122,9 +123,18 @@ class BeliefBase:
             for t in tempList:
                 cleaned_clauses.append(t.replace(" ", "").replace("(", "").replace(")", ""))
 
-        clauses_cnf = cleaned_clauses
-        clauses_cnf.append(not_alpha)
+        print("cleaned clauses: ", cleaned_clauses)
 
+        clauses_cnf = cleaned_clauses
+
+        #not_alpha = str(not_alpha).split("&")
+        #print(not_alpha)
+        #for n in not_alpha:
+        #    print(n)
+        #    clauses_cnf.append(n.replace(" ", "").replace("(", "").replace(")", ""))
+
+        #clauses_cnf.append(not_alpha)
+        #print(clauses_cnf)
         clause_pairs = self.get_clause_pairs(clauses_cnf)
         clauses = set(clauses_cnf)
 
@@ -158,8 +168,8 @@ class BeliefBase:
                 if i == j_negate:
                     temp_ci = ci
                     temp_cj = cj
-                    [temp_ci.remove(i) for xi in temp_ci]
-                    [temp_cj.remove(j) for xj in temp_cj]
+                    [temp_ci.remove(i) for xi in temp_ci if xi == i]
+                    [temp_cj.remove(j) for xj in temp_cj if xj == j]
                     temp_clause = temp_ci + temp_cj
 
                     temp_clause = list(set(temp_clause))

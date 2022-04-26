@@ -26,7 +26,7 @@ class Agent:
             self.belief_base.pl_resolution(belief)
         elif(action == "6"):
             belief = input("input belief")
-            belief = self.belief_base.to_belief(belief)
+            #belief = self.belief_base.to_belief(belief)
             print(self.belief_base.pl_resolution(belief))
 
     def quit(self):

@@ -3,7 +3,6 @@ from sympy import true
 from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
-from dpll import DpllSatSolver
 from sympy.logic.inference import satisfiable
 
 class BeliefBase:

@@ -21,7 +21,7 @@ class BeliefBase:
         #attention, should make sure A&B and B&A don't both exist
         if not self.validate_formatting(belief):
             print("Invalid formatting, press 'h' for help")
-            return 0;
+            return 0
         if not self.validate_belief(belief):
             print("invalid belief")
             return 0;

@@ -1,5 +1,5 @@
 import re
-from sympy.logic.boolalg import to_cnf
+from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
 
@@ -141,3 +141,22 @@ class BeliefBase:
 
         #maybe here we create world and evaluate them
         #maybe from there we get a highest plausability order.... I'm not sure
+
+    def revision(self, belief):
+        """Changes existing beliefs in regards to new beliefs"""
+        # Exclude all contradictions
+        contradicting_belief = Not(belief.cnf)
+
+        if contradicting_belief in self.beliefs_cnf:
+            self.contract(self.beliefs_cnf)
+        
+        self.expand(belief.formula)
+
+
+
+
+
+
+
+
+

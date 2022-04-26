@@ -3,6 +3,8 @@ from sympy import true
 from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
+from dpll import DpllSatSolver
+from sympy.logic.inference import satisfiable
 
 class BeliefBase:
     cnf_format: str
@@ -88,11 +90,7 @@ class BeliefBase:
         """Validate belief, no contradictions"""
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
-
-        #TODO: add contradiction statement spotting
-        #contradict = 
-
-        return True
+        return satisfiable(to_cnf(belief))
 
     def collect_beliefs_cnf(self):
         beliefs_cnf = []
@@ -180,13 +178,10 @@ class BeliefBase:
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
 
-    #not sure how we wanna do this, this is temporary, just removing right now
-    #laga hverju við erum að poppa með, á að vera priority-ið frekar
     def contract(self,belief):
+        #TODO atm this is just removing
         self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
 
-        #maybe here we create world and evaluate them
-        #maybe from there we get a highest plausability order.... I'm not sure
 
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs"""
@@ -204,6 +199,10 @@ class BeliefBase:
             if belief_cnf_format == value.cnf:
                 return True
         return False
+
+
+
+
 
 
 

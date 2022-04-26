@@ -16,20 +16,12 @@ class BeliefBase:
         self.valid_operators = ['&', '|', '>>', '<>', '~']
 
     def add(self, belief):
-
-        #add validate belief f.x. not q -> q shouldn't be let through
-        #and there should not be any redundancies
-        #if there are duplicates (thatis if we try to input something that's already in there)
-        #I think we should remove it from the queue and add to the back of it so it becomes a higher priority
-        #attention, should make sure A&B and B&A don't both exist
         if not self.validate_formatting(belief):
             print("Invalid formatting, press 'h' for help")
             return 0
         if not self.validate_belief(belief):
             print("invalid belief")
             return 0
-        
-        #use pl resolution and if the sentence can be entailed from the BB
 
         self.revision(belief)
 
@@ -60,7 +52,7 @@ class BeliefBase:
         else:
             print("Overview of sentences in the Belief Base:\n")
             for value in self.beliefBase.values():
-                print(value.cnf) #TODO breyta þessu til baka, fyrir test purposes
+                print(value.formula)
         return ''
 
     def validate_formatting(self, belief):
@@ -87,7 +79,7 @@ class BeliefBase:
         return True
 
     def validate_belief(self,belief):
-        """Validate belief, no contradictions"""
+        """Validate belief"""
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
         return satisfiable(to_cnf(belief))
@@ -101,7 +93,6 @@ class BeliefBase:
     def get_clause_pairs(self, clauses):
         return list(itertools.combinations(clauses, 2))
 
-
     #based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255
     def pl_resolution(self, alpha):
         """Check if Beliefbase entails new belies"""
@@ -111,24 +102,12 @@ class BeliefBase:
         clauses_cnf.append(not_alpha)
         cleaned_clauses = []
         for c in clauses_cnf:
-            #str(c).replace("(", "")
-            #str(c).replace(")", "")
             tempList = str(c).split("&")
             for t in tempList:
                 cleaned_clauses.append(t.replace(" ", "").replace("(", "").replace(")", ""))
 
-        print("cleaned clauses: ", cleaned_clauses)
-
         clauses_cnf = cleaned_clauses
 
-        #not_alpha = str(not_alpha).split("&")
-        #print(not_alpha)
-        #for n in not_alpha:
-        #    print(n)
-        #    clauses_cnf.append(n.replace(" ", "").replace("(", "").replace(")", ""))
-
-        #clauses_cnf.append(not_alpha)
-        #print(clauses_cnf)
         clause_pairs = self.get_clause_pairs(clauses_cnf)
         clauses = set(clauses_cnf)
 
@@ -172,26 +151,32 @@ class BeliefBase:
         
         return resolvents
 
+    #adds to the belief base without checking for consistency (is taken care of elsewhere)
     def expand(self, belief):
+        """Adds to the belief base"""
         belief = Belief(belief, self.beliefCount)
-        #self.beliefBase[belief.formula] = belief
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
 
+    #removes all beliefs that don't align with new belief
     def contract(self,belief):
-        #TODO atm this is just removing
+        """Removes all beliefs that don't align with the input one"""
+
+        #currently just removes one
         self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
 
-
     def revision(self, belief):
-        """Changes existing beliefs in regards to new beliefs"""
+        """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
-        contradicting_belief_cnf = to_cnf(Not(belief))
+        #contradicting_belief_cnf = to_cnf(Not(belief))
 
-        if self.check_if_in_belief_base_cnf(contradicting_belief_cnf):
-            #self.contract(belief)
-            print("foundit")
-        
+        #if self.check_if_in_belief_base_cnf(contradicting_belief_cnf):
+
+        #Based on Levi and Harper identities
+        #það er greinilega sitthvor hluturinn levi = þetta her fyrir neðan
+        #harper -> T-p = T * not(p)
+        #skulum ákveða hvort við notum
+        self.contract(Not(belief))
         self.expand(belief)
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):
@@ -200,6 +185,9 @@ class BeliefBase:
                 return True
         return False
 
+    #TODO? laga röðun í þessu priority dæmi
+    def refactor_base():
+        return 0
 
 
 

@@ -1,9 +1,21 @@
+import re
+from sympy.logic.boolalg import to_cnf
 import queue
 from belief import Belief
+
+#def add(self, belief):
+#        """Adds belief from user input to the base"""
+#        #add verification step
+#        if '<>' in belief:
+#            belief = self.parsing_bicond(belief)
+#        self.cnf.append(to_cnf(belief))
+#        self.beliefs.append(belief)
+
 
 class BeliefBase:
     beliefBase : dict
     beliefCount : int
+    return_belief: str
 
     def __init__(self):
         self.beliefBase = {}
@@ -35,6 +47,7 @@ class BeliefBase:
 
         return 1
 
+    
     def parsing_bicond(self, belief):
         """Formats biconditionality to match requirements 
             for sympy logic to_cnf"""
@@ -48,7 +61,8 @@ class BeliefBase:
 
 
     def clear(self):
-        self.beliefBase = {}
+        """Clears all beliefs from the BeliefBase"""
+        self.beliefs = {}
 
     def get(self):
         return list(self.beliefBase.values())

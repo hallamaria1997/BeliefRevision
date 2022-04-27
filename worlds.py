@@ -20,7 +20,7 @@ class Worlds:
         truth_list = []
         for key, value in belief_base.items():
             for sub_str in value.formula:
-                if sub_str not in valid_operators:
+                if sub_str not in valid_operators and sub_str.isalpha():
                     truth_list.append(sub_str)
         print("variables: ", list(set(truth_list)))
         return list(set(truth_list))
@@ -46,6 +46,7 @@ class Worlds:
 
                 new_world = new_world.replace(temp_variables[k], variables[k])
             return_world = World(new_world)
+            print(return_world.values)
             self.worlds.append(return_world)
             #print(self.worlds)
             #return self.worlds

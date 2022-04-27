@@ -105,9 +105,13 @@ class BeliefBase:
 
     def validate_belief(self,belief):
         """Validate belief"""
+        if(not satisfiable(to_cnf(belief))):
+            return False
+
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
-        return satisfiable(to_cnf(belief))
+
+        return True
 
     def collect_beliefs_cnf(self):
         beliefs_cnf = []

@@ -4,6 +4,7 @@ from belief import Belief
 import itertools
 from sympy.logic.inference import satisfiable
 from worlds import Worlds
+from itertools import product
 
 class BeliefBase:
     cnf_format: str
@@ -11,6 +12,7 @@ class BeliefBase:
 
     def __init__(self):
         self.beliefBase = {}
+        self.clauses = []
         self.beliefCount = 0
         self.valid_operators = ['&', '|', '>>', '<>', '~']
         self.worlds = Worlds()
@@ -23,16 +25,12 @@ class BeliefBase:
             print("invalid belief")
             return 0        
         
-        input_belief = Belief(belief, self.beliefCount)
-        beliefBase_temp = self.beliefBase.copy()
-        beliefBase_temp[self.beliefCount] = input_belief
+        #input_belief = Belief(belief, self.beliefCount)
+        #beliefBase_temp = self.beliefBase.copy()
+        #beliefBase_temp[self.beliefCount] = input_belief
 
-        if len(self.beliefBase) == 0:
-            self.expand(belief)
-        else:
-            self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
-            
-            self.revision(belief)
+            #self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
+        self.revision(belief)
 
 
     def to_belief(self,belief):
@@ -106,12 +104,14 @@ class BeliefBase:
 
     def validate_belief(self,belief):
         """Validate belief"""
+
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
-        #return belief
+
+        if(not satisfiable(to_cnf(belief))):
+            return False
+
         return True
-        
-        #satisfiable(to_cnf(belief))
 
     def collect_beliefs_cnf(self):
         beliefs_cnf = []
@@ -183,9 +183,14 @@ class BeliefBase:
     #adds to the belief base without checking for consistency (is taken care of elsewhere)
     def expand(self, belief):
         """Adds to the belief base"""
+        self.clauses.append(to_cnf(belief))
         belief = Belief(belief, self.beliefCount)
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
+
+    #https://stackoverflow.com/questions/715417/converting-from-a-string-to-boolean-in-python
+    def str2bool(self,v):
+        return v.lower() in ("yes", "true", "t", "1")
 
         
 
@@ -196,6 +201,68 @@ class BeliefBase:
         #currently just removes one
         #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
         #self.beliefBase.pop(belief.formula, None)
+        input_belief = Belief(belief, self.beliefCount)
+        beliefBase_temp = self.beliefBase.copy()
+        beliefBase_temp[self.beliefCount] = input_belief
+
+        # worldDict = {}
+
+
+        # for item in product(items, repeat=len(variables)):
+        #     count = 0
+        #     for v in range(len(variables)):
+        #         print(variables[count])
+        #         print(item[count])
+        #         worldDict[count] = tuple(variables[count], item[count])
+        #         count += 1
+
+        #     print("new world?")
+        
+
+        variables = self.worlds.get_variables(beliefBase_temp, self.valid_operators)
+        variable_assignments = []
+        items = [True, False]
+
+        for item in product(items, repeat=len(variables)):
+            variable_assignments.append(item)
+
+        new_input_cnf = str(input_belief.cnf)
+        print(type(new_input_cnf), new_input_cnf)
+
+        worlds_to_eval = []
+
+        for va in variable_assignments:
+            count = 0
+            for v in variables:
+                #print(va[count])
+                #print(v)
+                ass = str(va[count])
+                var = str(v)
+                new_input_cnf = str(new_input_cnf).replace(var,ass)
+                new_input_cnf = new_input_cnf.replace("~True", "False").replace("~False", "True")
+                #print(type(new_input_cnf), new_input_cnf)
+                count += 1
+
+            #print(new_input_cnf)
+            #print(not True)
+            #print("The sentence", new_input_cnf)
+            #print("The truth value" ,bool(new_input_cnf))
+            if self.str2bool(new_input_cnf):
+                worlds_to_eval.append(va)
+            #print("Evalaution ", eval(new_input_cnf, True))
+            #print("new world")
+            new_input_cnf = input_belief.cnf
+
+        print("Worlds to eval: ",worlds_to_eval)
+        #print(type(not))
+
+        for wte in worlds_to_eval:
+            print(wte)
+            clauses_copy = self.clauses.copy()
+            for c in clauses_copy:
+                print(c)
+
+
 
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs, uses """
@@ -208,7 +275,7 @@ class BeliefBase:
         #það er greinilega sitthvor hluturinn levi = þetta her fyrir neðan
         #harper -> T-p = T * not(p)
         #skulum ákveða hvort við notum
-        self.contract(Not(belief))
+        self.contract(str(Not(belief)))
         self.expand(belief)
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):

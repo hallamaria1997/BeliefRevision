@@ -102,7 +102,6 @@ class BeliefBase:
             print('sex')
             return False
     
-
         return True
 
     def validate_belief(self,belief):

@@ -37,14 +37,16 @@ class Worlds:
         for i in range(world_count):
             new_world = cnf_combinations
             for k in range(variable_count):
-                curr_variable = variables[k]
+                temp_variable = variables[k]
                 if i % 2**(variable_count-k-1)==0 and i!=0:
+
                     if "~" in variables[k]:
                         variables[k] = variables[k].replace("~","")
                     else:
                         variables[k] = "~"+variables[k]
-
+                
                 new_world = new_world.replace(temp_variables[k], variables[k])
+            new_world = new_world.replace("~~", "")
             return_world = World(new_world)
             print(return_world.values)
             self.worlds.append(return_world)

@@ -1,9 +1,9 @@
 import re
-from sympy import true
 from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
 from sympy.logic.inference import satisfiable
+from worlds import Worlds
 
 class BeliefBase:
     cnf_format: str
@@ -13,6 +13,7 @@ class BeliefBase:
         self.beliefBase = {}
         self.beliefCount = 0
         self.valid_operators = ['&', '|', '>>', '<>', '~']
+        self.worlds = Worlds()
 
     def add(self, belief):
         if not self.validate_formatting(belief):
@@ -20,9 +21,20 @@ class BeliefBase:
             return 0
         if not self.validate_belief(belief):
             print("invalid belief")
-            return 0
+            return 0        
+        
+        input_belief = Belief(belief, self.beliefCount)
+        beliefBase_temp = self.beliefBase.copy()
+        beliefBase_temp[self.beliefCount] = input_belief
 
-        self.revision(belief)
+        if len(self.beliefBase) == 0:
+            self.expand(belief)
+        else:
+            self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
+            print(self.worlds.worlds[0].values)
+
+            self.revision(belief)
+
 
     def to_belief(self,belief):
         belief = Belief(belief, self.beliefCount)
@@ -37,6 +49,13 @@ class BeliefBase:
         belief = re.sub(r"[()]", "", belief)
         return_belief = '('+belief+')&('+belief[-1]+'>>'+belief[0]+')'
         return return_belief
+
+    def get_belief_combinations(self, beliefBase):
+        """Get all beliefs joined together using &"""
+        belief_combination = str(to_cnf('&'.join(
+            [str(belief.cnf) for belief in beliefBase.values()]), True))
+        print('Belief combinations:',belief_combination)
+        return belief_combination
 
 
     def clear(self):
@@ -61,6 +80,9 @@ class BeliefBase:
         if " " not in belief:
             belief = " ".join(belief)
         belief = belief.split(" ")
+        for ch in belief:
+            if (not ch.isalpha()) and (ch not in self.valid_operators):
+                return False
         # check if there is a digit
         if any(char.isdigit() for char in belief):
             return False
@@ -69,11 +91,10 @@ class BeliefBase:
             # check if they are not consecutive
             if (belief[i].isalpha() and belief[i+1].isalpha()):
                 return False
-
             if (belief[i] in self.valid_operators) and (belief[i+1] in self.operators):
                 return False
         # check if operators are in the beginning or end of the string
-        if (belief[0] in self.valid_operators) or (belief[-1] in self.valid_operators):
+        if (belief[0] in self.operators) or (belief[-1] in self.valid_operators):
             return False
         return True
 
@@ -157,12 +178,15 @@ class BeliefBase:
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
 
+        
+
     #removes all beliefs that don't align with new belief
     def contract(self,belief):
         """Removes all beliefs that don't align with the input one"""
 
         #currently just removes one
-        self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
+        #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
+        #self.beliefBase.pop(belief.formula, None)
 
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs, uses """
@@ -187,15 +211,6 @@ class BeliefBase:
     #TODO? laga röðun í þessu priority dæmi
     def refactor_base():
         return 0
-
-
-
-
-
-
-
-
-
 
 
 

@@ -26,7 +26,9 @@ class Worlds:
         return list(set(truth_list))
 
     def create_worlds(self, belief_combination, variables):
-        
+
+        self.worlds = []
+
         cnf_combinations = str(to_cnf(belief_combination, True))
         variable_count = len(variables)
         world_count = 2**variable_count
@@ -36,24 +38,17 @@ class Worlds:
             new_world = cnf_combinations
             for k in range(variable_count):
                 curr_variable = variables[k]
-                #if i % 2**(variable_count-k-1)==0 and i!=0:
-                if "~" in variables[k]:
-                    variables[k] = variables[k].replace("~","")
-                else:
-                    variables[k] = "~"+variables[k]
+                if i % 2**(variable_count-k-1)==0 and i!=0:
+                    if "~" in variables[k]:
+                        variables[k] = variables[k].replace("~","")
+                    else:
+                        variables[k] = "~"+variables[k]
 
                 new_world = new_world.replace(temp_variables[k], variables[k])
-            
             return_world = World(new_world)
             self.worlds.append(return_world)
             #print(self.worlds)
             #return self.worlds
-
-        for i, w in enumerate(self.worlds):
-            print(w.values)
-
-        return
-
 
 
 

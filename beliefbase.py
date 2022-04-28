@@ -2,6 +2,12 @@ import re
 from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
+from sympy.logic.inference import satisfiable
+from worlds import Worlds
+from itertools import product
+from sympy import symbols
+from sympy.logic.boolalg import to_cnf
+from sympy.logic import simplify_logic
 
 class BeliefBase:
     cnf_format: str
@@ -11,29 +17,23 @@ class BeliefBase:
         self.beliefBase = {}
         self.beliefCount = 0
         self.valid_operators = ['&', '|', '>>', '<>', '~']
+        self.worlds = Worlds()
 
     def add(self, belief):
-
-        #add validate belief f.x. not q -> q shouldn't be let through
-        #and there should not be any redundancies
-        #if there are duplicates (thatis if we try to input something that's already in there)
-        #I think we should remove it from the queue and add to the back of it so it becomes a higher priority
-        #attention, should make sure A&B and B&A don't both exist
         if not self.validate_formatting(belief):
             print("Invalid formatting, press 'h' for help")
             return 0
         if not self.validate_belief(belief):
             print("invalid belief")
-            return 0
+            return 0        
         
-        belief = Belief(belief, self.beliefCount)
-        #use pl resolution and if the sentence can be entailed from the BB
+        #input_belief = Belief(belief, self.beliefCount)
+        #beliefBase_temp = self.beliefBase.copy()
+        #beliefBase_temp[self.beliefCount] = input_belief
 
-        #breyat þessu í eitt revision fall
-        self.contract(belief)
-        self.expand(belief)
+            #self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
+        self.revision(belief)
 
-        return 1
 
     def to_belief(self,belief):
         belief = Belief(belief, self.beliefCount)
@@ -49,6 +49,13 @@ class BeliefBase:
         return_belief = '('+belief+')&('+belief[-1]+'>>'+belief[0]+')'
         return return_belief
 
+    def get_belief_combinations(self, beliefBase):
+        """Get all beliefs joined together using &"""
+        belief_combination = str(to_cnf('&'.join(
+            [str(belief.cnf) for belief in beliefBase.values()]), True))
+        print('Belief combinations:',belief_combination)
+        return belief_combination
+
 
     def clear(self):
         """Clears all beliefs from the BeliefBase"""
@@ -62,7 +69,7 @@ class BeliefBase:
         else:
             print("Overview of sentences in the Belief Base:\n")
             for value in self.beliefBase.values():
-                print(value.cnf) #TODO breyta þessu til baka, fyrir test purposes
+                print(value.formula)
         return ''
 
     def validate_formatting(self, belief):
@@ -72,29 +79,39 @@ class BeliefBase:
         if " " not in belief:
             belief = " ".join(belief)
         belief = belief.split(" ")
+        print('einn')
+        for i in range(len(belief)-1):
+            if (not belief[i].isalpha() and not belief[i+1].isalpha) and (belief[i] not in self.valid_operators or belief[i]+belief[i+1] not in self.valid_operators):
+                print('tveir')
+                return False
         # check if there is a digit
         if any(char.isdigit() for char in belief):
+            print('þrír')
             return False
         # check if two consecutive characters and if two consecutive operators
         for i in range(0, len(belief) - 1):
             # check if they are not consecutive
             if (belief[i].isalpha() and belief[i+1].isalpha()):
+                print('fjórir')
                 return False
-
             if (belief[i] in self.valid_operators) and (belief[i+1] in self.operators):
+                print('fimm')
                 return False
         # check if operators are in the beginning or end of the string
-        if (belief[0] in self.valid_operators) or (belief[-1] in self.valid_operators):
+        if (belief[0] in self.operators) or (belief[-1] in self.valid_operators):
+            print('sex')
             return False
+    
         return True
 
     def validate_belief(self,belief):
-        """Validate belief, no contradictions"""
+        """Validate belief"""
+
         if '<>' in belief:
             belief = self.parsing_bicond(belief)
 
-        #TODO: add contradiction statement spotting
-        #contradict = 
+        if(not satisfiable(to_cnf(belief))):
+            return False
 
         return True
 
@@ -107,23 +124,20 @@ class BeliefBase:
     def get_clause_pairs(self, clauses):
         return list(itertools.combinations(clauses, 2))
 
-
     #based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255
     def pl_resolution(self, alpha):
         """Check if Beliefbase entails new belies"""
 
-        not_alpha = str(Not(alpha.cnf))
+        not_alpha = to_cnf(Not(alpha))
         clauses_cnf = self.collect_beliefs_cnf()
+        clauses_cnf.append(not_alpha)
         cleaned_clauses = []
         for c in clauses_cnf:
-            #str(c).replace("(", "")
-            #str(c).replace(")", "")
             tempList = str(c).split("&")
             for t in tempList:
                 cleaned_clauses.append(t.replace(" ", "").replace("(", "").replace(")", ""))
 
         clauses_cnf = cleaned_clauses
-        clauses_cnf.append(not_alpha)
 
         clause_pairs = self.get_clause_pairs(clauses_cnf)
         clauses = set(clauses_cnf)
@@ -158,8 +172,8 @@ class BeliefBase:
                 if i == j_negate:
                     temp_ci = ci
                     temp_cj = cj
-                    [temp_ci.remove(i) for xi in temp_ci]
-                    [temp_cj.remove(j) for xj in temp_cj]
+                    [temp_ci.remove(i) for xi in temp_ci if xi == i]
+                    [temp_cj.remove(j) for xj in temp_cj if xj == j]
                     temp_clause = temp_ci + temp_cj
 
                     temp_clause = list(set(temp_clause))
@@ -168,36 +182,158 @@ class BeliefBase:
         
         return resolvents
 
+    #adds to the belief base without checking for consistency (is taken care of elsewhere)
     def expand(self, belief):
-        #self.beliefBase[belief.formula] = belief
+        """Adds to the belief base"""
+        belief = Belief(belief, self.beliefCount)
         self.beliefBase[self.beliefCount] = belief
         self.beliefCount += 1
 
-    #not sure how we wanna do this, this is temporary, just removing right now
-    #laga hverju við erum að poppa með, á að vera priority-ið frekar
+    #based on..
+    #https://stackoverflow.com/questions/715417/converting-from-a-string-to-boolean-in-python
+    def str2bool(self,v):
+        return (("true") in v.lower())
+
+    def input_to_assignments(self, belief, var, ass):
+        belief = str(belief).replace(var,ass)
+        belief = belief.replace("~True", "False")
+        belief = belief.replace("~False", "True")
+
+        return belief
+
+    def get_not_beliefBase(self,world, variables):
+        clauses = self.collect_beliefs_cnf()
+        return_base = []
+
+        #print("WORLD ", world)
+        #print("VARIABLES ", variables)
+
+        for c in clauses:
+            count = 0
+            temp_c = str(c)[:] #make copy
+            for v in variables:
+                ass = str(world[count])
+                var = str(v)
+                c = self.input_to_assignments(str(c), var, ass)
+                count += 1
+
+                #print("fixed clauses ", c)
+            if self.check_truth(c):
+                return_base.append(temp_c)
+        #print("Return base", return_base)
+        return return_base
+
+
+    #removes all beliefs that don't align with new belief
     def contract(self,belief):
-        self.beliefBase.pop(belief.formula, None)
+        """Removes all beliefs that don't align with the input one"""
+
+        #currently just removes one
+        #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
+        #self.beliefBase.pop(belief.formula, None)
+        variables, worlds_to_eval = self.create_worlds(belief)
+        #print(variables)
+        #print(worlds_to_eval)
+
+        not_beliefBases = []
+
+        for wte in worlds_to_eval:
+            not_beliefBases.append(self.get_not_beliefBase(wte, variables))
+
+        print(min(not_beliefBases, key=len, default="EMPTY"))
+        not_beliefBases.index
+
+        for rb in not_beliefBases:
+            print(rb)
+        #print(not_beliefBases.index)
+
+        
 
 
+        
 
-        #maybe here we create world and evaluate them
-        #maybe from there we get a highest plausability order.... I'm not sure
+    def create_worlds(self, belief):
+        input_belief = Belief(belief, self.beliefCount)
+        beliefBase_temp = self.beliefBase.copy()
+        beliefBase_temp[self.beliefCount] = input_belief
+
+        variables = self.worlds.get_variables(beliefBase_temp, self.valid_operators)
+        variable_assignments = []
+        items = [True, False]
+
+        for item in product(items, repeat=len(variables)):
+            variable_assignments.append(item)
+
+        new_input_cnf = str(input_belief.cnf)
+        #print(type(new_input_cnf), new_input_cnf)
+
+        worlds_to_eval = []
+
+        for va in variable_assignments:
+            count = 0
+            for v in variables:
+                #print(va[count])
+                #print(v)
+                ass = str(va[count])
+                var = str(v)
+                new_input_cnf = self.input_to_assignments(new_input_cnf, var, ass)
+                
+                #print(type(new_input_cnf), new_input_cnf)
+                count += 1
+
+            #print(new_input_cnf)
+            #print(not True)
+            #print("The sentence", new_input_cnf)
+            #print("The truth value" ,self.str2bool(new_input_cnf))
+            #TODO setja í fall?
+            if(self.check_truth(new_input_cnf)):
+                worlds_to_eval.append(va)
+                #print("True evalution")
+            #print("Evalaution ", eval(new_input_cnf, True))
+            #print("new world")
+            new_input_cnf = input_belief.cnf
+
+        #print("Worlds to eval: ",worlds_to_eval)
+        #print(type(not))
+
+        #for wte in worlds_to_eval:
+        #    clauses = self.collect_beliefs_cnf()
+        #    for c in clauses:
+        #        print(c)
+
+        return variables, worlds_to_eval
+
+    def check_truth(self, statement):
+        inputs = statement.split("&")
+        if all( self.str2bool(part) for part in inputs ):
+            return True
+        return False
+
+
 
     def revision(self, belief):
-        """Changes existing beliefs in regards to new beliefs"""
+        """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
-        contradicting_belief = Not(belief.cnf)
+        #contradicting_belief_cnf = to_cnf(Not(belief))
 
-        if contradicting_belief in self.beliefs_cnf:
-            self.contract(self.beliefs_cnf)
-        
-        self.expand(belief.formula)
+        #if self.check_if_in_belief_base_cnf(contradicting_belief_cnf):
 
+        #Based on Levi and Harper identities
+        #það er greinilega sitthvor hluturinn levi = þetta her fyrir neðan
+        #harper -> T-p = T * not(p)
+        #skulum ákveða hvort við notum
+        self.contract(str(Not(belief)))
+        self.expand(belief)
 
+    def check_if_in_belief_base_cnf(self, belief_cnf_format):
+        for value in self.beliefBase.values():
+            if belief_cnf_format == value.cnf:
+                return True
+        return False
 
-
-
-
+    #TODO? laga röðun í þessu priority dæmi
+    def refactor_base():
+        return 0
 
 
 

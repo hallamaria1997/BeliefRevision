@@ -240,14 +240,15 @@ class BeliefBase:
         for wte in worlds_to_eval:
             not_beliefBases.append(self.get_not_beliefBase(wte, variables))
 
-        print(min(not_beliefBases, key=len, default="EMPTY"))
+        print(min(not_beliefBases, key=len, default=[]))
         not_beliefBases.index
 
         for rb in not_beliefBases:
             print(rb)
         #print(not_beliefBases.index)
 
-        
+        #TODO
+        #mínusa not beliefbasinn frá okkar og assigna það value sem beliefbase-inn okkar
 
 
         

@@ -76,27 +76,21 @@ class BeliefBase:
         if " " not in belief:
             belief = " ".join(belief)
         belief = belief.split(" ")
-        print('einn')
         for i in range(len(belief)-1):
             if (not belief[i].isalpha() and not belief[i+1].isalpha) and (belief[i] not in self.valid_operators or belief[i]+belief[i+1] not in self.valid_operators):
-                print('tveir')
                 return False
         # check if there is a digit
         if any(char.isdigit() for char in belief):
-            print('þrír')
             return False
         # check if two consecutive characters and if two consecutive operators
         for i in range(0, len(belief) - 1):
             # check if they are not consecutive
             if (belief[i].isalpha() and belief[i+1].isalpha()):
-                print('fjórir')
                 return False
             if (belief[i] in self.valid_operators) and (belief[i+1] in self.operators):
-                print('fimm')
                 return False
         # check if operators are in the beginning or end of the string
         if (belief[0] in self.operators) or (belief[-1] in self.valid_operators):
-            print('sex')
             return False
     
         return True
@@ -269,6 +263,7 @@ class BeliefBase:
 
     def create_worlds(self, belief):
         input_belief = Belief(belief, self.beliefCount)
+        print(input_belief.formula)
         beliefBase_temp = self.beliefBase.copy()
         beliefBase_temp[self.beliefCount] = input_belief
         variables = self.worlds.get_variables(beliefBase_temp, self.valid_operators)

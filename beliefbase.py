@@ -5,7 +5,7 @@ import itertools
 from sympy.logic.inference import satisfiable
 from worlds import Worlds
 from itertools import product
-from sympy import symbols
+from sympy import Q, symbols
 from sympy.logic.boolalg import to_cnf
 from sympy.logic import simplify_logic
 
@@ -104,7 +104,8 @@ class BeliefBase:
     def validate_belief(self,belief):
         """Validate belief"""
 
-        if '<>' in belief:
+        if "<>" in belief:
+            print("we are parsing in bicond from validate belief")
             belief = self.parsing_bicond(belief)
 
         if(not satisfiable(to_cnf(belief))):
@@ -222,33 +223,33 @@ class BeliefBase:
         #print("Return base", return_base)
         return return_base
 
-    def contract(self,belief):
-        print("help")
+    #def contract(self,belief):
+    #    print("help")
 
 
     #removes all beliefs that don't align with new belief
-    def contract_tmp(self,belief):
+    def contract(self,belief):
         """Removes all beliefs that don't align with the input one"""
 
         #currently just removes one
         #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
         #self.beliefBase.pop(belief.formula, None)
-        variables, worlds_to_eval = self.create_worlds(belief)
-        #print(variables)
-        #print(worlds_to_eval)
 
+        print("printin belief from contract ", belief)
+
+        variables, worlds_to_eval = self.create_worlds(belief)
+        
         not_beliefBases = []
 
         for wte in worlds_to_eval:
-            #print("WORLD: ", wte)
+            print("WORLD: ", wte)
             not_beliefBases.append(self.get_not_beliefBase(wte, variables))
 
         minus_clauses = min(not_beliefBases, key=len, default=[])
 
-        #for rb in not_beliefBases:
-        #    print("beliefbases from rb")
-        #    print(rb)
-        #print(not_beliefBases.index)
+        for rb in not_beliefBases:
+            print("beliefbases from rb")
+            print(rb)
 
         print(minus_clauses)
         new_beliefBase = self.beliefBase.copy()
@@ -265,8 +266,6 @@ class BeliefBase:
             
         
         self.beliefBase = new_beliefBase
-
-        
 
     def create_worlds(self, belief):
         input_belief = Belief(belief, self.beliefCount)
@@ -329,22 +328,30 @@ class BeliefBase:
         """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
 
-        belief = Belief(belief, -1)
-        not_belief = Belief(f'~({belief.cnf})', -1)
+        #belief = self.parsing_bicond(belief)
+        #if "<>" in belief:
+            #beliefInstance = Belief(self.parsing_bicond(belief), -1)
+        #else:
+            #beliefInstance = Belief(belief, -1)
+        #not_belief = Belief(f'~({beliefInstance.cnf})', -1)
 
-        print(not_belief)
+        #print(to_cnf(not_belief).cnf)
+
 
         #TODO commenta þetta aftur inn
-        #if "<>" in belief:
-            #self.contract(str(Not(self.parsing_bicond(belief))))
-        #    self.expand(self.parsing_bicond(belief))
-        #else:
-            #self.contract(str(Not(belief)))
-        #    self.expand(belief)
+        if "<>" in belief:
+            print("we are here..?")
+            self.contract(str(Not(self.parsing_bicond(belief))))
+            self.expand(self.parsing_bicond(belief))
+        else:
+            self.contract(str(Not(belief)))
+            self.expand(belief)
 
         #ath nú er verið að senda inn instance af belief klasanum 
-        self.contract(not_belief)
-        self.expand(belief)
+        #self.contract(not_belief)
+        #self.expand(belief)
+
+        #TODO check for redundancies
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):
         for value in self.beliefBase.values():

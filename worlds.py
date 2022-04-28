@@ -6,10 +6,6 @@ class World:
     def __init__(self, values: str):
         self.values = values
 
-    
-#    def __init__(self, world):
-#        self.world = world
-
 class Worlds:
     worlds = List[World]
 
@@ -19,9 +15,14 @@ class Worlds:
     def get_variables(self, belief_base, valid_operators):
         truth_list = []
         for key, value in belief_base.items():
-            for sub_str in value.formula:
+            if "Implies" in value.formula:
+                temp = value.formula.replace("Implies", "<>")
+            else:
+                temp = value.formula
+            for sub_str in temp:                
                 if sub_str not in valid_operators and sub_str.isalpha():
                     truth_list.append(sub_str)
+        
         print("variables: ", list(set(truth_list)))
         return list(set(truth_list))
 
@@ -50,14 +51,3 @@ class Worlds:
             return_world = World(new_world)
             print(return_world.values)
             self.worlds.append(return_world)
-            #print(self.worlds)
-            #return self.worlds
-
-
-
-        
-
-
-
-
-    

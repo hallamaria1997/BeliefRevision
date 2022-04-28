@@ -30,10 +30,8 @@ class BeliefBase:
         #input_belief = Belief(belief, self.beliefCount)
         #beliefBase_temp = self.beliefBase.copy()
         #beliefBase_temp[self.beliefCount] = input_belief
-
-            #self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
+        #self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
         self.revision(belief)
-
 
     def to_belief(self,belief):
         belief = Belief(belief, self.beliefCount)
@@ -55,7 +53,6 @@ class BeliefBase:
             [str(belief.cnf) for belief in beliefBase.values()]), True))
         print('Belief combinations:',belief_combination)
         return belief_combination
-
 
     def clear(self):
         """Clears all beliefs from the BeliefBase"""
@@ -191,7 +188,7 @@ class BeliefBase:
 
     #based on..
     #https://stackoverflow.com/questions/715417/converting-from-a-string-to-boolean-in-python
-    def str2bool(self,v):
+    def str2bool(self, v):
         return (("true") in v.lower())
 
     def input_to_assignments(self, belief, var, ass):
@@ -240,23 +237,18 @@ class BeliefBase:
         for wte in worlds_to_eval:
             not_beliefBases.append(self.get_not_beliefBase(wte, variables))
 
-        print(min(not_beliefBases, key=len, default="EMPTY"))
+        # print(min(not_beliefBases, key=len, default="EMPTY"))
         not_beliefBases.index
 
         for rb in not_beliefBases:
-            print(rb)
+            pass
+            # print(rb)
         #print(not_beliefBases.index)
-
-        
-
-
-        
 
     def create_worlds(self, belief):
         input_belief = Belief(belief, self.beliefCount)
         beliefBase_temp = self.beliefBase.copy()
         beliefBase_temp[self.beliefCount] = input_belief
-
         variables = self.worlds.get_variables(beliefBase_temp, self.valid_operators)
         variable_assignments = []
         items = [True, False]
@@ -309,8 +301,6 @@ class BeliefBase:
             return True
         return False
 
-
-
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
@@ -322,8 +312,12 @@ class BeliefBase:
         #það er greinilega sitthvor hluturinn levi = þetta her fyrir neðan
         #harper -> T-p = T * not(p)
         #skulum ákveða hvort við notum
-        self.contract(str(Not(belief)))
-        self.expand(belief)
+        if "<>" in belief:
+            self.contract(str(Not(self.parsing_bicond(belief))))
+            self.expand(self.parsing_bicond(belief))
+        else:
+            self.contract(str(Not(belief)))
+            self.expand(belief)
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):
         for value in self.beliefBase.values():
@@ -332,8 +326,5 @@ class BeliefBase:
         return False
 
     #TODO? laga röðun í þessu priority dæmi
-    def refactor_base():
+    def refactor_base(self):
         return 0
-
-
-

@@ -19,9 +19,9 @@ class Worlds:
                 temp = value.formula.replace("Implies", "<>")
             else:
                 temp = value.formula
-            for sub_str in temp:                
-                if sub_str not in valid_operators and sub_str.isalpha():
-                    truth_list.append(sub_str)
+            for sub_str in str(temp):                
+               if sub_str not in valid_operators and sub_str.isalpha():
+                   truth_list.append(sub_str)
         
         print("variables: ", list(set(truth_list)))
         return list(set(truth_list))
@@ -49,5 +49,5 @@ class Worlds:
                 new_world = new_world.replace(temp_variables[k], variables[k])
             new_world = new_world.replace("~~", "")
             return_world = World(new_world)
-            print(return_world.values)
+            #print(return_world.values)
             self.worlds.append(return_world)

@@ -14,9 +14,9 @@ class Worlds:
 
     def get_variables(self, belief_base, valid_operators):
         truth_list = []
-        for key, value in belief_base.items():
-            if "Implies" in value.formula:
-                temp = value.formula.replace("Implies", "<>")
+        for key, value in belief_base.items(): #implies != <> heldur = >>
+            if "Implies" in value.formula: #p>>q = ~(Implies(p,q))
+                temp = value.formula.replace("Implies", "") #okkur er alveg sama um <> í variables TODO strippa bara allt nema variables?
             else:
                 temp = value.formula
             for sub_str in str(temp):                

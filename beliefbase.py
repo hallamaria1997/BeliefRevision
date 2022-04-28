@@ -231,6 +231,9 @@ class BeliefBase:
 
         print("printin belief from contract ", belief)
 
+        # TODO passa að þegar p>>q er komið hingað að það sé á réttu formi 
+        # núna er að koma ~(Implies(p,q))
+
         variables, worlds_to_eval = self.create_worlds(belief)
         
         not_beliefBases = []
@@ -332,6 +335,17 @@ class BeliefBase:
 
         #print(to_cnf(not_belief).cnf)
 
+        #TODO, laga þetta implies dót
+        #TODO skoða hvort ef belief[1] == "&" -> not-a sjálfar og ná þannig að senda það inn? p&q gangi upp
+        #p, q, p>>q, p|q
+
+        #TODO ??
+        # og kannski útfæra þetta ef við nennum?
+        #er len(belief) = 3 og er belief[1] = & -> búa til eigið not?
+
+        # TODO -þyrfti kannski að hafa þetta á 
+        # (str(Not(to_cfn(self.parsing_bicond(belief)))))
+        # myndi það leysa fullt af dóti kannski?
 
         #TODO commenta þetta aftur inn
         if "<>" in belief:
@@ -339,7 +353,7 @@ class BeliefBase:
             self.contract(str(Not(self.parsing_bicond(belief))))
             self.expand(self.parsing_bicond(belief))
         else:
-            self.contract(str(Not(belief)))
+            self.contract(str(Not(belief))) #kannski þarf að setja þetta á cfn form til þess að það gerist rétt?
             self.expand(belief)
 
         #ath nú er verið að senda inn instance af belief klasanum 

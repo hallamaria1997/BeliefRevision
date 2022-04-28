@@ -222,9 +222,12 @@ class BeliefBase:
         #print("Return base", return_base)
         return return_base
 
+    def contract(self,belief):
+        print("help")
+
 
     #removes all beliefs that don't align with new belief
-    def contract(self,belief):
+    def contract_tmp(self,belief):
         """Removes all beliefs that don't align with the input one"""
 
         #currently just removes one
@@ -325,34 +328,26 @@ class BeliefBase:
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
-        #contradicting_belief_cnf = to_cnf(Not(belief))
 
-        #if self.check_if_in_belief_base_cnf(contradicting_belief_cnf):
+        belief = Belief(belief, -1)
+        not_belief = Belief(f'~({belief.cnf})', -1)
 
-        #Based on Levi and Harper identities
-        #það er greinilega sitthvor hluturinn levi = þetta her fyrir neðan
-        #harper -> T-p = T * not(p)
-        #skulum ákveða hvort við notum
-        if "<>" in belief:
-            self.contract(str(Not(self.parsing_bicond(belief))))
-            self.expand(self.parsing_bicond(belief))
-        else:
-            self.contract(str(Not(belief)))
-            self.expand(belief)
+        print(not_belief)
 
-        self.check_for_inconsistencies(belief)
+        #TODO commenta þetta aftur inn
+        #if "<>" in belief:
+            #self.contract(str(Not(self.parsing_bicond(belief))))
+        #    self.expand(self.parsing_bicond(belief))
+        #else:
+            #self.contract(str(Not(belief)))
+        #    self.expand(belief)
+
+        #ath nú er verið að senda inn instance af belief klasanum 
+        self.contract(not_belief)
+        self.expand(belief)
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):
         for value in self.beliefBase.values():
             if belief_cnf_format == value.cnf:
                 return True
         return False
-
-    #TODO something here...
-    def check_for_inconsistencies(self,belief):
-        return 0
-
-
-    #TODO? laga röðun í þessu priority dæmi
-    def refactor_base(self):
-        return 0

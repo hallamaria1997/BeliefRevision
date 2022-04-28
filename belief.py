@@ -11,6 +11,5 @@ class Belief:
         self.cnf = to_cnf(formula)
         self.priority = priority
 
-
     def __repr__(self):
         return self.formula

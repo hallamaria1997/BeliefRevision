@@ -19,6 +19,7 @@ class Worlds:
     def get_variables(self, belief_base, valid_operators):
         truth_list = []
         for key, value in belief_base.items():
+            print("value formula", value.formula)
             for sub_str in value.formula:
                 if sub_str not in valid_operators and sub_str.isalpha():
                     truth_list.append(sub_str)

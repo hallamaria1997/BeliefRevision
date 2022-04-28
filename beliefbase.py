@@ -202,6 +202,7 @@ class BeliefBase:
         #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
         #self.beliefBase.pop(belief.formula, None)
         input_belief = Belief(belief, self.beliefCount)
+        print(input_belief.formula)
         beliefBase_temp = self.beliefBase.copy()
         beliefBase_temp[self.beliefCount] = input_belief
 

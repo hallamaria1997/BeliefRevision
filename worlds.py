@@ -7,12 +7,14 @@ class World:
         self.values = values
 
 class Worlds:
+    """k"""
     worlds = List[World]
 
     def __init__(self):
         self.worlds = []
 
     def get_variables(self, belief_base, valid_operators):
+        """Get all variables included in the belief base at given time in their normal state"""
         truth_list = []
         for key, value in belief_base.items(): #implies != <> heldur = >>
             if "Implies" in value.formula: #p>>q = ~(Implies(p,q))
@@ -27,13 +29,16 @@ class Worlds:
         return list(set(truth_list))
 
     def create_worlds(self, belief_combination, variables):
+        """Create all possible worlds for the existing beliefs, the number of worlds generated
+        is dependent on the number of variables n, world count = 2^n. The world creation is dependent 
+        on the belief combination generated in beliefbase.py"""
 
-        self.worlds = []
+        self.worlds = []  # list of possible worlds
 
-        cnf_combinations = str(to_cnf(belief_combination, True))
-        variable_count = len(variables)
-        world_count = 2**variable_count
-        temp_variables = variables[:]
+        cnf_combinations = str(to_cnf(belief_combination, True)) 
+        variable_count = len(variables) # define variable count
+        world_count = 2**variable_count # generate number of worlds based on the variables
+        temp_variables = variables[:] # empty list to store in iterations
         
         for i in range(world_count):
             new_world = cnf_combinations

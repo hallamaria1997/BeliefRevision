@@ -20,6 +20,7 @@ class BeliefBase:
         self.worlds = Worlds()
 
     def add(self, belief):
+        """Gateway for input belief"""
         if not self.validate_formatting(belief):
             print("Invalid formatting, press 'h' for help")
             return 0
@@ -34,6 +35,7 @@ class BeliefBase:
         self.revision(belief)
 
     def to_belief(self,belief):
+        """Acessing the belief state  dor the input belief"""
         belief = Belief(belief, self.beliefCount)
         return belief
 
@@ -96,7 +98,7 @@ class BeliefBase:
         return True
 
     def validate_belief(self,belief):
-        """Validate belief"""
+        """Process for bicondidtional queries and checks inout for satisfiability"""
 
         if "<>" in belief:
             print("we are parsing in bicond from validate belief")
@@ -265,6 +267,8 @@ class BeliefBase:
         self.beliefBase = new_beliefBase
 
     def create_worlds(self, belief):
+
+
         input_belief = Belief(belief, self.beliefCount)
         print(input_belief.formula)
         beliefBase_temp = self.beliefBase.copy()
@@ -363,6 +367,7 @@ class BeliefBase:
         #TODO check for redundancies
 
     def check_if_in_belief_base_cnf(self, belief_cnf_format):
+        """Check for belief on CNF format"""
         for value in self.beliefBase.values():
             if belief_cnf_format == value.cnf:
                 return True

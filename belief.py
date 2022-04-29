@@ -4,12 +4,10 @@ class Belief:
     
     formula: str
     cnf: str
-    priority: int
 
-    def __init__(self, formula: str, priority: int):
+    def __init__(self, formula: str):
         self.formula = formula
         self.cnf = to_cnf(formula)
-        self.priority = priority
 
     def __repr__(self):
         return self.formula

@@ -3,7 +3,6 @@ from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
 from sympy.logic.inference import satisfiable
-from worlds import Worlds
 from itertools import product
 from sympy import Q, symbols
 from sympy.logic.boolalg import to_cnf
@@ -15,9 +14,7 @@ class BeliefBase:
 
     def __init__(self):
         self.beliefBase = {}
-        self.beliefCount = 0
         self.valid_operators = ['&', '|', '>>', '<>', '~']
-        self.worlds = Worlds()
 
     def add(self, belief):
         if not self.validate_formatting(belief):
@@ -26,16 +23,8 @@ class BeliefBase:
         if not self.validate_belief(belief):
             print("invalid belief")
             return 0        
-        
-        #input_belief = Belief(belief, self.beliefCount)
-        #beliefBase_temp = self.beliefBase.copy()
-        #beliefBase_temp[self.beliefCount] = input_belief
-        #self.worlds.create_worlds(self.get_belief_combinations(beliefBase_temp) , self.worlds.get_variables(beliefBase_temp, self.valid_operators))
-        self.revision(belief)
 
-    def to_belief(self,belief):
-        belief = Belief(belief, self.beliefCount)
-        return belief
+        self.revision(belief)
 
     def parsing_bicond(self, belief):
         """Formats biconditionality to match requirements 
@@ -46,6 +35,10 @@ class BeliefBase:
         belief = re.sub(r"[()]", "", belief)
         return_belief = '('+belief+')&('+belief[-1]+'>>'+belief[0]+')'
         return return_belief
+
+    def to_belief(self,belief):
+        belief = Belief(belief)
+        return belief
 
     def get_belief_combinations(self, beliefBase):
         """Get all beliefs joined together using &"""
@@ -97,9 +90,7 @@ class BeliefBase:
 
     def validate_belief(self,belief):
         """Validate belief"""
-
         if "<>" in belief:
-            print("we are parsing in bicond from validate belief")
             belief = self.parsing_bicond(belief)
 
         if(not satisfiable(to_cnf(belief))):
@@ -177,193 +168,48 @@ class BeliefBase:
     #adds to the belief base without checking for consistency (is taken care of elsewhere)
     def expand(self, belief):
         """Adds to the belief base"""
-        belief = Belief(belief, self.beliefCount)
-        self.beliefBase[self.beliefCount] = belief
-        self.beliefCount += 1
-
-    #based on..
-    #https://stackoverflow.com/questions/715417/converting-from-a-string-to-boolean-in-python
-    def str2bool(self, v):
-        return (("true") in v.lower())
-
-    def input_to_assignments(self, belief, var, ass):
-        belief = str(belief).replace(var,ass)
-        belief = belief.replace("~True", "False")
-        belief = belief.replace("~False", "True")
-
-        return belief
-
-    def get_not_beliefBase(self,world, variables):
-        clauses = self.collect_beliefs_cnf()
-        return_base = []
-
-        #print("WORLD ", world)
-        #print("VARIABLES ", variables)
-
-        for c in clauses:
-            count = 0
-            temp_c = str(c)[:] #make copy
-            for v in variables:
-                ass = str(world[count])
-                var = str(v)
-                c = self.input_to_assignments(str(c), var, ass)
-                count += 1
-
-                #print("fixed clauses ", c)
-            if self.check_truth(c):
-                print("checking truth for this clause2", c)
-                print("checking truth for this clause", temp_c)
-                return_base.append(temp_c)
-        #print("Return base", return_base)
-        return return_base
-
-    #def contract(self,belief):
-    #    print("help")
-
+        belief = Belief(belief)
+        self.beliefBase[belief.formula] = belief
 
     #removes all beliefs that don't align with new belief
-    def contract(self,belief):
-        """Removes all beliefs that don't align with the input one"""
+    def contract(self, negated_cnf, cnf):
+        beliefBaseCopy = self.beliefBase.copy() #original beliefbase with all beliefs
+        beliefBases = []
 
-        #currently just removes one
-        #self.beliefBase = {key:val for key, val in self.beliefBase.items() if val.formula != belief.formula}
-        #self.beliefBase.pop(belief.formula, None)
+        if len(self.beliefBase) > 0:
+            for key,item in beliefBaseCopy.items(): #traverses once
+                beliefBaseOuterCopy = self.beliefBase.copy()
+                self.beliefBase = beliefBaseOuterCopy
+                for key1, item1 in beliefBaseCopy.items(): #traverses size of belief times
+                    if(self.pl_resolution(negated_cnf)):
+                        beliefBases.append(self.beliefBase.copy())
+                    self.beliefBase.pop(key1, '')
+                beliefBaseOuterCopy.pop(key, '')
 
-        print("printin belief from contract ", belief)
+        beliefsToRemove = min(beliefBases, key=len, default={})
 
-        # TODO passa að þegar p>>q er komið hingað að það sé á réttu formi 
-        # núna er að koma ~(Implies(p,q))
+        originalBeliefs = beliefBaseCopy
+        self.beliefBase = self.remove_beliefs(originalBeliefs, beliefsToRemove)
 
-        variables, worlds_to_eval = self.create_worlds(belief)
+    def remove_beliefs(self, originalBeliefs, beliefsToRemove):
+        returnBase = originalBeliefs.copy()
         
-        not_beliefBases = []
+        for key,item in originalBeliefs.items():
+            for key1,item2 in beliefsToRemove.items():
+                if key==key1:
+                    returnBase.pop(key)
 
-        for wte in worlds_to_eval:
-            print("WORLD: ", wte)
-            not_beliefBases.append(self.get_not_beliefBase(wte, variables))
-
-        minus_clauses = min(not_beliefBases, key=len, default=[])
-
-        for rb in not_beliefBases:
-            print("beliefbases from rb")
-            print(rb)
-
-        print(minus_clauses)
-        new_beliefBase = self.beliefBase.copy()
-
-        #TODO
-        #mínusa not beliefbasinn frá okkar og assigna það value sem beliefbase-inn okkar
-
-        for key,val in self.beliefBase.items():
-            print("this is key, val", key, val)
-            for mc in minus_clauses:
-                if str(val.cnf) == mc:
-                    new_beliefBase.pop(key)
-                    print("this has been verified as not okay" ,val.cnf, mc)
-            
-        
-        self.beliefBase = new_beliefBase
-
-    def create_worlds(self, belief):
-        input_belief = Belief(belief, self.beliefCount)
-        print(input_belief.formula)
-        beliefBase_temp = self.beliefBase.copy()
-        beliefBase_temp[self.beliefCount] = input_belief
-        variables = self.worlds.get_variables(beliefBase_temp, self.valid_operators)
-        variable_assignments = []
-        items = [True, False]
-
-        for item in product(items, repeat=len(variables)):
-            variable_assignments.append(item)
-
-        new_input_cnf = str(input_belief.cnf)
-        #print(type(new_input_cnf), new_input_cnf)
-
-        worlds_to_eval = []
-
-        for va in variable_assignments:
-            count = 0
-            for v in variables:
-                #print(va[count])
-                #print(v)
-                ass = str(va[count])
-                var = str(v)
-                new_input_cnf = self.input_to_assignments(new_input_cnf, var, ass)
-                
-                #print(type(new_input_cnf), new_input_cnf)
-                count += 1
-
-            #print(new_input_cnf)
-            #print(not True)
-            #print("The sentence", new_input_cnf)
-            #print("The truth value" ,self.str2bool(new_input_cnf))
-            #TODO setja í fall?
-            #print("new_input_cnf: ", new_input_cnf)
-            if(self.check_truth(new_input_cnf)):
-                worlds_to_eval.append(va)
-                #print("True evalution")
-            #print("Evalaution ", eval(new_input_cnf, True))
-            #print("new world")
-            new_input_cnf = input_belief.cnf
-
-        #print("Worlds to eval: ",worlds_to_eval)
-        #print(type(not))
-
-        #for wte in worlds_to_eval:
-        #    clauses = self.collect_beliefs_cnf()
-        #    for c in clauses:
-        #        print(c)
-
-        return variables, worlds_to_eval
-
-    def check_truth(self, statement):
-        inputs = statement.split("&")
-        if all( self.str2bool(part) for part in inputs ):
-            return True
-        return False
+        return returnBase
 
     def revision(self, belief):
         """Changes existing beliefs in regards to new beliefs, uses """
         # Exclude all contradictions
 
-        #belief = self.parsing_bicond(belief)
-        #if "<>" in belief:
-            #beliefInstance = Belief(self.parsing_bicond(belief), -1)
-        #else:
-            #beliefInstance = Belief(belief, -1)
-        #not_belief = Belief(f'~({beliefInstance.cnf})', -1)
-
-        #print(to_cnf(not_belief).cnf)
-
-        #TODO, laga þetta implies dót
-        #TODO skoða hvort ef belief[1] == "&" -> not-a sjálfar og ná þannig að senda það inn? p&q gangi upp
-        #p, q, p>>q, p|q
-
-        #TODO ??
-        # og kannski útfæra þetta ef við nennum?
-        #er len(belief) = 3 og er belief[1] = & -> búa til eigið not?
-
-        # TODO -þyrfti kannski að hafa þetta á 
-        # (str(Not(to_cfn(self.parsing_bicond(belief)))))
-        # myndi það leysa fullt af dóti kannski?
-
-        #TODO commenta þetta aftur inn
         if "<>" in belief:
-            print("we are here..?")
-            self.contract(str(Not(self.parsing_bicond(belief))))
-            self.expand(self.parsing_bicond(belief))
-        else:
-            self.contract(str(Not(belief))) #kannski þarf að setja þetta á cfn form til þess að það gerist rétt?
-            self.expand(belief)
+            belief = self.parsing_bicond(belief)
 
-        #ath nú er verið að senda inn instance af belief klasanum 
-        #self.contract(not_belief)
-        #self.expand(belief)
-
-        #TODO check for redundancies
-
-    def check_if_in_belief_base_cnf(self, belief_cnf_format):
-        for value in self.beliefBase.values():
-            if belief_cnf_format == value.cnf:
-                return True
-        return False
+        cnf = to_cnf(belief)
+        negated_cnf = to_cnf(f'~({cnf})')
+        self.contract(negated_cnf, cnf)
+        self.expand(belief)
+        self.beliefBase.pop(str(negated_cnf), '')

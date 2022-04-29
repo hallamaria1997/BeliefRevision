@@ -1,12 +1,11 @@
 import re
-from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
 from belief import Belief
 import itertools
-from sympy.logic.inference import satisfiable
 from itertools import product
 from sympy import Q, symbols
-from sympy.logic.boolalg import to_cnf
 from sympy.logic import simplify_logic
+from sympy.logic.boolalg import to_cnf, Not, Nor, Or, And, Equivalent
+from sympy.logic.inference import satisfiable
 
 class BeliefBase:
     cnf_format: str
@@ -17,6 +16,7 @@ class BeliefBase:
         self.valid_operators = ['&', '|', '>>', '<>', '~']
 
     def add(self, belief):
+        """ Checks if a belief is valid and calls revise if it is """
         if not self.validate_formatting(belief):
             print("Invalid formatting, press 'h' for help")
             return 0
@@ -27,8 +27,7 @@ class BeliefBase:
         self.revision(belief)
 
     def parsing_bicond(self, belief):
-        """Formats biconditionality to match requirements 
-            for sympy logic to_cnf"""
+        """ Formats biconditionality to match requirements for sympy logic to_cnf """
         bicond_patt = "<>"
         parenthesis_patt = '\((.+?)\)'
         belief = re.sub(bicond_patt, '>>', belief)
@@ -41,20 +40,20 @@ class BeliefBase:
         return belief
 
     def get_belief_combinations(self, beliefBase):
-        """Get all beliefs joined together using &"""
+        """ Get all beliefs joined together using & """
         belief_combination = str(to_cnf('&'.join(
             [str(belief.cnf) for belief in beliefBase.values()]), True))
         print('Belief combinations:',belief_combination)
         return belief_combination
 
     def clear(self):
-        """Clears all beliefs from the BeliefBase"""
+        """ Clears all beliefs from the BeliefBase """
         self.beliefBase.clear()
         print("The Belief Base is now empty!")
         return ''
 
     def get(self):
-        """Returns all beliefs in the base"""
+        """ Returns all beliefs in the base """
         if len(self.beliefBase) == 0: print('There is nothing stored in the Belief Base!') 
         else:
             print("Overview of sentences in the Belief Base:\n")
@@ -63,7 +62,7 @@ class BeliefBase:
         return ''
 
     def validate_formatting(self, belief):
-        """Validate format of user input"""
+        """ Validate format of user input """
         self.operators = self.valid_operators[0:-1]
         # add whitespace between and split on space to create a list of inputs
         if " " not in belief:
@@ -89,7 +88,7 @@ class BeliefBase:
         return True
 
     def validate_belief(self,belief):
-        """Validate belief"""
+        """ Validate belief """
         if "<>" in belief:
             belief = self.parsing_bicond(belief)
 
@@ -99,17 +98,19 @@ class BeliefBase:
         return True
 
     def collect_beliefs_cnf(self):
+        """ Collect all beliefs """
         beliefs_cnf = []
         for key,values in self.beliefBase.items():
             beliefs_cnf.append(values.cnf)
         return beliefs_cnf
 
     def get_clause_pairs(self, clauses):
+        """ Get all possible combinations of clauses """
         return list(itertools.combinations(clauses, 2))
 
-    #based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255
     def pl_resolution(self, alpha):
-        """Check if Beliefbase entails new belies"""
+        """ Check if Beliefbase entails new beliefs. 
+        Based on PL-Resolution Algorithm from Aritifical Intelligence a modern approach p.255"""
 
         not_alpha = to_cnf(Not(alpha))
         clauses_cnf = self.collect_beliefs_cnf()
@@ -132,7 +133,7 @@ class BeliefBase:
 
             for pairs in clause_pairs:
                 resolvents = self.pl_resolve(pairs)
-                if '' in resolvents: #if the list constains an empty clause
+                if '' in resolvents: # if the list constains an empty clause
                     return True
                 new = new.union(set(resolvents))
 
@@ -142,8 +143,8 @@ class BeliefBase:
             clauses = clauses.union(new)
 
 
-    def pl_resolve(self,pairs):
-
+    def pl_resolve(self, pairs):
+        """ Resolves each pair and erases contradictions if possible """
         resolvents = []
 
         ci = str(pairs[0]).replace(" ", "").split("|")
@@ -165,22 +166,21 @@ class BeliefBase:
         
         return resolvents
 
-    #adds to the belief base without checking for consistency (is taken care of elsewhere)
     def expand(self, belief):
-        """Adds to the belief base"""
+        """ Adds to the belief base without checking for consistency (is taken care of elsewhere) """
         belief = Belief(belief)
         self.beliefBase[belief.formula] = belief
 
-    #removes all beliefs that don't align with new belief
     def contract(self, negated_cnf, cnf):
-        beliefBaseCopy = self.beliefBase.copy() #original beliefbase with all beliefs
+        """ Removes all beliefs that don't align with new belief """
+        beliefBaseCopy = self.beliefBase.copy() # original beliefbase with all beliefs
         beliefBases = []
 
         if len(self.beliefBase) > 0:
-            for key,item in beliefBaseCopy.items(): #traverses once
+            for key,item in beliefBaseCopy.items(): # traverses once
                 beliefBaseOuterCopy = self.beliefBase.copy()
                 self.beliefBase = beliefBaseOuterCopy
-                for key1, item1 in beliefBaseCopy.items(): #traverses size of belief times
+                for key1, item1 in beliefBaseCopy.items(): # traverses size of belief times
                     if(self.pl_resolution(negated_cnf)):
                         beliefBases.append(self.beliefBase.copy())
                     self.beliefBase.pop(key1, '')
@@ -190,8 +190,10 @@ class BeliefBase:
 
         originalBeliefs = beliefBaseCopy
         self.beliefBase = self.remove_beliefs(originalBeliefs, beliefsToRemove)
+        self.beliefBase.pop(str(negated_cnf), '')
 
     def remove_beliefs(self, originalBeliefs, beliefsToRemove):
+        """ Removes beliefs from the belief base """
         returnBase = originalBeliefs.copy()
         
         for key,item in originalBeliefs.items():
@@ -202,8 +204,7 @@ class BeliefBase:
         return returnBase
 
     def revision(self, belief):
-        """Changes existing beliefs in regards to new beliefs, uses """
-        # Exclude all contradictions
+        """ Changes existing beliefs in regards to new beliefs, uses """
 
         if "<>" in belief:
             belief = self.parsing_bicond(belief)
@@ -212,4 +213,3 @@ class BeliefBase:
         negated_cnf = to_cnf(f'~({cnf})')
         self.contract(negated_cnf, cnf)
         self.expand(belief)
-        self.beliefBase.pop(str(negated_cnf), '')
